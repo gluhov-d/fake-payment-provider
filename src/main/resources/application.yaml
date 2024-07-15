@@ -1,0 +1,13 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: fake-payment-provider
+  r2dbc:
+    url: r2dbc:pool:postgresql://localhost:55720/payment_provider
+    username: paymentprovider
+    password: paymentprovider
+  flyway:
+    url: jdbc:postgresql://localhost:55720/payment_provider
+    locations: classpath:db/migration
