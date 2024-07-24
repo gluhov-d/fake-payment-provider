@@ -22,6 +22,8 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
+    private static final Long MIN_AMOUNT_PAYOUT = 100L;
+    private static final String PAYOUT = "payout";
     private final TransactionRepository transactionRepository;
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
@@ -33,13 +35,13 @@ public class PaymentService {
     private final CardDataMapper cardDataMapper;
     private final PaymentMethodMapper paymentMethodMapper;
 
-    public Flux<TransactionDto> getBetween(LocalDateTime startDate, LocalDateTime endDate, UUID merchantId) {
-        return transactionRepository.getBetween(merchantId, startDate, endDate)
+    public Flux<TransactionDto> getBetweenByType(LocalDateTime startDate, LocalDateTime endDate, UUID merchantId, String type) {
+        return transactionRepository.getBetweenByType(merchantId, type, startDate, endDate)
                 .flatMap(this::constructTransactionDto);
     }
 
-    public Mono<TransactionDto> getById(UUID id) {
-        return transactionRepository.findById(id)
+    public Mono<TransactionDto> getByIdAndType(UUID id, String type) {
+        return transactionRepository.getByIdAndType(id, type)
                 .switchIfEmpty(Mono.error(new EntityNotFoundException("Transaction not found", "FPP_TRANSACTION_NOT_FOUND")))
                 .flatMap(this::constructTransactionDto);
     }
@@ -64,8 +66,12 @@ public class PaymentService {
     }
 
     @Transactional
-    public Mono<?> topUp(TransactionDto transactionDto, UUID uuid) {
+    public Mono<?> createTransaction(TransactionDto transactionDto, UUID uuid, String type) {
         Transaction transaction = transactionMapper.map(transactionDto);
+        if (type.equals(PAYOUT) && transaction.getAmount() < MIN_AMOUNT_PAYOUT) {
+            return Mono.error(new ApiException("Transaction less than min amount", "FPP_PAYOUT_MIN_AMOUNT"));
+        }
+        transaction.setType(type);
         CardData cardData = cardDataMapper.map(transactionDto.getCardData());
         Customer customer = customerMapper.map(transactionDto.getCustomer());
         PaymentMethod paymentMethod = paymentMethodMapper.map(transactionDto.getPaymentMethod());
@@ -80,10 +86,13 @@ public class PaymentService {
                                 .flatMap(existingCustomer -> {
                                     transaction.setPaymentMethod(existingPaymentMethod);
                                     transaction.setPaymentMethodId(existingPaymentMethod.getId());
-                                    if (existingCustomer.getId() == null) {
+                                    if (existingCustomer.isNew()) {
+                                        if (type.equals(PAYOUT)) {
+                                            return Mono.error(new ApiException("Customer not found", "FPP_CUSTOMER_NOT_FOUND"));
+                                        }
                                         return createNewCustomerAndTransaction(cardData, customer, transaction, uuid, now);
                                     } else {
-                                        return processExistingCustomerTransaction(existingCustomer, transaction, uuid, now);
+                                        return processExistingCustomerTransaction(existingCustomer, transaction, cardData, uuid, now);
                                     }
                                 })
                         )
@@ -128,30 +137,33 @@ public class PaymentService {
                                                 .modifiedBy(String.valueOf(uuid))
                                                 .build())
                                 .onErrorResume(error -> Mono.error(new RuntimeException(error.getMessage())))
-                                .flatMap(savedCustomer -> processExistingCustomerTransaction(savedCustomer, transaction, uuid, now))
+                                .flatMap(savedCustomer -> processExistingCustomerTransaction(savedCustomer, transaction, cardData, uuid, now))
                         )
                 );
     }
 
-    private Mono<?> processExistingCustomerTransaction(Customer existingCustomer, Transaction transaction, UUID uuid, LocalDateTime now) {
+    private Mono<?> processExistingCustomerTransaction(Customer existingCustomer, Transaction transaction, CardData cardData, UUID uuid, LocalDateTime now) {
         return accountRepository.findById(existingCustomer.getAccountId())
-                .flatMap(account -> {
-                    if (account.getCurrency().equals(transaction.getCurrency())) {
-                        transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
-                        transaction.setCustomerId(existingCustomer.getId());
-                        transaction.setType("transaction");
-                        transaction.setCreatedAt(now);
-                        transaction.setUpdatedAt(now);
-                        transaction.setCreatedBy(String.valueOf(uuid));
-                        transaction.setModifiedBy(String.valueOf(uuid));
-                        transaction.setStatus(Status.ACTIVE);
-                        transaction.setMessage("OK");
-                        transaction.setMerchantId(uuid);
-                        return transactionRepository.save(transaction)
-                                .flatMap(savedTransaction -> Mono.just(new TransactionResponseDto(savedTransaction.getId(), "OK", savedTransaction.getTransactionStatus())));
-                    } else {
-                        return Mono.error(new ApiException("Wrong account currency", "FPP_TOPUP_WRONG_CURRENCY"));
-                    }
-                });
+                .flatMap(account -> cardRepository.findById(account.getCardId())
+                        .flatMap(existingCardData -> {
+                            if (!cardData.getCardNumber().equals(existingCardData.getCardNumber())) {
+                                return Mono.error(new ApiException("Wrong card number", "FPP_WRONG_CARD_NUMBER"));
+                            }
+                            if (account.getCurrency().equals(transaction.getCurrency())) {
+                                transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
+                                transaction.setCustomerId(existingCustomer.getId());
+                                transaction.setCreatedAt(now);
+                                transaction.setUpdatedAt(now);
+                                transaction.setCreatedBy(String.valueOf(uuid));
+                                transaction.setModifiedBy(String.valueOf(uuid));
+                                transaction.setStatus(Status.ACTIVE);
+                                transaction.setMessage("OK");
+                                transaction.setMerchantId(uuid);
+                                return transactionRepository.save(transaction)
+                                        .flatMap(savedTransaction -> Mono.just(new TransactionResponseDto(savedTransaction.getId(), "OK", savedTransaction.getTransactionStatus())));
+                            } else {
+                                return Mono.error(new ApiException("Wrong account currency", "FPP_WRONG_CURRENCY"));
+                            }
+                }));
     }
 }

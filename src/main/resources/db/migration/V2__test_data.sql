@@ -26,7 +26,7 @@ VALUES
 INSERT INTO transaction (id, notification_url, payment_method_id, type, currency, amount, language, message, status, customer_id, merchant_id, modified_by, created_by, transaction_status)
 VALUES
     ('6e09f680-1c67-11ec-9621-0242ac130002', 'https://proselyte.net/webhook/transaction', '5d09f680-1c67-11ec-9621-0242ac130002', 'transaction', 'USD', 50000, 'en', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130002', '4c09f680-1c67-11ec-9621-0242ac130002', 'system', 'system', 'IN_PROGRESS'),
-    ('6e09f680-1c67-11ec-9621-0242ac130003', 'https://proselyte.net/webhook/transaction', '5d09f680-1c67-11ec-9621-0242ac130003', 'transaction', 'EUR', 20000, 'de', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130003', '4c09f680-1c67-11ec-9621-0242ac130003', 'system', 'system', 'IN_PROGRESS');
+    ('6e09f680-1c67-11ec-9621-0242ac130003', 'https://proselyte.net/webhook/payout', '5d09f680-1c67-11ec-9621-0242ac130003', 'payout', 'EUR', 20000, 'de', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130003', '4c09f680-1c67-11ec-9621-0242ac130002', 'system', 'system', 'IN_PROGRESS');
 
 INSERT INTO webhook (id, transaction_id, status, message, modified_by, created_by, transaction_status)
 VALUES
