@@ -1,6 +1,5 @@
 package com.github.gluhov.fakepaymentprovider.model;
 
-import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,7 +17,6 @@ import java.util.UUID;
 @NoArgsConstructor
 public abstract class BaseEntity implements Persistable<UUID> {
     @Id
-    @NotNull
     @Column("id")
     private UUID id;
     @Column("status")
