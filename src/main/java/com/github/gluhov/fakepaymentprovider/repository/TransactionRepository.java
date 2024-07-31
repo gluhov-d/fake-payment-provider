@@ -16,4 +16,7 @@ public interface TransactionRepository extends R2dbcRepository<Transaction, UUID
 
     @Query("SELECT * FROM transaction t WHERE t.id = :1 AND t.type = :2")
     Mono<Transaction> getByIdAndType(UUID uuid, String type);
+
+    @Query("SELECT * FROM transaction t WHERE t.transaction_status = 'IN_PROGRESS'")
+    Flux<Transaction> getAllWithStatusInProgress();
 }

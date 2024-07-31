@@ -36,6 +36,8 @@ public class Transaction extends BaseEntity {
     private Customer customer;
     @Column("customer_id")
     private UUID customerId;
+    @Column("card_id")
+    private UUID cardId;
     @Transient
     private PaymentMethod paymentMethod;
     @Column("payment_method_id")
@@ -45,7 +47,7 @@ public class Transaction extends BaseEntity {
     public Transaction(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy,
                        String modifiedBy, String notificationUrl, String type, String currency, Long amount, String language,
                        String message, TransactionStatus transactionStatus, Merchant merchant, UUID merchantId, Customer customer,
-                       UUID customerId, PaymentMethod paymentMethod, UUID paymentMethodId) {
+                       UUID customerId, UUID cardId, PaymentMethod paymentMethod, UUID paymentMethodId) {
         super(id, status, createdAt, updatedAt, createdBy, modifiedBy);
         this.notificationUrl = notificationUrl;
         this.type = type;
@@ -58,6 +60,7 @@ public class Transaction extends BaseEntity {
         this.merchantId = merchantId;
         this.customer = customer;
         this.customerId = customerId;
+        this.cardId = cardId;
         this.paymentMethod = paymentMethod;
         this.paymentMethodId = paymentMethodId;
     }

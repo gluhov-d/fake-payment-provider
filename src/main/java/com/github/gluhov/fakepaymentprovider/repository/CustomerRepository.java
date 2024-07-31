@@ -9,6 +9,6 @@ import java.util.UUID;
 
 public interface CustomerRepository extends R2dbcRepository<Customer, UUID> {
 
-    @Query("SELECT * FROM customer c WHERE  c.first_name = :1 AND c.last_name = :2")
-    Mono<Customer> findCustomerByFirstNameAndLastName(String firstName, String lastName);
+    @Query("SELECT * FROM customer c WHERE  c.first_name = :1 AND c.last_name = :2 AND c.country = :3")
+    Mono<Customer> findCustomerByFirstNameAndLastNameAndCountry(String firstName, String lastName, String country);
 }

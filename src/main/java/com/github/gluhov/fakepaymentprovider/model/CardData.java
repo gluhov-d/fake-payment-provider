@@ -22,13 +22,16 @@ public class CardData extends BaseEntity {
     private LocalDate expDate;
     @Column("cvv")
     private int cvv;
+    @Column("account_id")
+    private UUID account_id;
 
     @Builder
-    public CardData(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String modifiedBy, String cardNumber, LocalDate expDate, int cvv) {
-        super(id,  status, createdAt, updatedAt, createdBy, modifiedBy);
+    public CardData(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String modifiedBy, String cardNumber, LocalDate expDate, int cvv, UUID account_id) {
+        super(id, status, createdAt, updatedAt, createdBy, modifiedBy);
         this.cardNumber = cardNumber;
         this.expDate = expDate;
         this.cvv = cvv;
+        this.account_id = account_id;
     }
 
     @ToString.Include(name = "cardNumber")

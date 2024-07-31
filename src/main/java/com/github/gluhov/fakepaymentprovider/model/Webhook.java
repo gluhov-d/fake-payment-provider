@@ -14,16 +14,18 @@ import java.util.UUID;
 @EqualsAndHashCode(callSuper = true)
 public class Webhook extends BaseEntity {
 
-    private Transaction transaction;
+    @Column("transaction_id")
+    private UUID transactionId;
     @Column("message")
     private String message;
+    @Column("transaction_status")
     private TransactionStatus transactionStatus;
 
     @Builder
 
-    public Webhook(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String modifiedBy, Transaction transaction, String message, TransactionStatus transactionStatus) {
+    public Webhook(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String modifiedBy, UUID transactionId, String message, TransactionStatus transactionStatus) {
         super(id, status, createdAt, updatedAt, createdBy, modifiedBy);
-        this.transaction = transaction;
+        this.transactionId = transactionId;
         this.message = message;
         this.transactionStatus = transactionStatus;
     }
