@@ -2,13 +2,11 @@ package com.github.gluhov.fakepaymentprovider.service;
 
 import com.github.gluhov.fakepaymentprovider.model.Transaction;
 import com.github.gluhov.fakepaymentprovider.model.TransactionStatus;
-import com.github.gluhov.fakepaymentprovider.util.ProcessingUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.transaction.reactive.TransactionalOperator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.scheduler.VirtualTimeScheduler;

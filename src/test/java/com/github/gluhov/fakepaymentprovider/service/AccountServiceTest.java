@@ -2,7 +2,6 @@ package com.github.gluhov.fakepaymentprovider.service;
 
 import com.github.gluhov.fakepaymentprovider.exception.EntityNotFoundException;
 import com.github.gluhov.fakepaymentprovider.model.Account;
-import com.github.gluhov.fakepaymentprovider.model.Transaction;
 import com.github.gluhov.fakepaymentprovider.repository.AccountRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -10,8 +9,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Mono;
-
-import java.util.UUID;
 
 import static com.github.gluhov.fakepaymentprovider.service.AccountData.*;
 import static com.github.gluhov.fakepaymentprovider.service.TransactionData.transaction;
@@ -63,8 +60,6 @@ public class AccountServiceTest {
     void makeMoneyTransfer() {
         when(accountRepository.findByOwnerIdAndType(accountCustomer.getOwnerId(), accountCustomer.getOwnerType())).thenReturn(Mono.just(accountCustomer));
         when(accountRepository.findByOwnerIdAndType(accountMerchant.getOwnerId(), accountMerchant.getOwnerType())).thenReturn(Mono.just(accountMerchant));
-        /*when(accountRepository.findByOwnerIdAndType(accountCustomer.getOwnerId(), accountCustomer.getOwnerType())).thenReturn(Mono.just(accountCustomer));
-        when(accountRepository.findByOwnerIdAndType(accountMerchant.getOwnerId(), accountMerchant.getOwnerType())).thenReturn(Mono.just(accountMerchant));*/
         when(accountRepository.save(accountCustomer)).thenReturn(Mono.just(accountUpdatedCustomer));
         when(accountRepository.save(accountMerchant)).thenReturn(Mono.just(accountUpdatedMerchant));
 
@@ -73,61 +68,6 @@ public class AccountServiceTest {
         verify(accountRepository, times(1)).findByOwnerIdAndType(accountCustomer.getOwnerId(), accountCustomer.getOwnerType());
         verify(accountRepository, times(1)).save(accountUpdatedCustomer);
         verify(accountRepository, times(1)).findByOwnerIdAndType(accountMerchant.getOwnerId(), accountMerchant.getOwnerType());
-        verify(accountRepository, times(1)).save(accountUpdatedMerchant);
-    }
-
-    @Test
-    void makeMoneyTransfer1() {
-        UUID customerOwnerId = UUID.randomUUID();
-        String customerOwnerType = "customer";
-        UUID merchantOwnerId = UUID.randomUUID();
-        String merchantOwnerType = "merchant";
-
-        Account accountCustomer = Account.builder()
-                .id(UUID.randomUUID())
-                .balance(1000L)
-                .ownerId(customerOwnerId)
-                .ownerType(customerOwnerType)
-                .build();
-
-        Account accountMerchant = Account.builder()
-                .id(UUID.randomUUID())
-                .balance(500L)
-                .ownerId(merchantOwnerId)
-                .ownerType(merchantOwnerType)
-                .build();
-
-        Account accountUpdatedCustomer = Account.builder()
-                .id(accountCustomer.getId())
-                .balance(accountCustomer.getBalance() - 200L)  // Assume transfer amount is 200
-                .ownerId(customerOwnerId)
-                .ownerType(customerOwnerType)
-                .build();
-
-        Account accountUpdatedMerchant = Account.builder()
-                .id(accountMerchant.getId())
-                .balance(accountMerchant.getBalance() + 200L)  // Assume transfer amount is 200
-                .ownerId(merchantOwnerId)
-                .ownerType(merchantOwnerType)
-                .build();
-
-        Transaction transaction = new Transaction();
-        transaction.setAmount(200L);
-        transaction.setCurrency("USD");
-        transaction.setType("transaction");
-        transaction.setCustomerId(customerOwnerId);
-        transaction.setMerchantId(merchantOwnerId);
-
-        when(accountRepository.findByOwnerIdAndType(customerOwnerId, customerOwnerType)).thenReturn(Mono.just(accountCustomer));
-        when(accountRepository.findByOwnerIdAndType(merchantOwnerId, merchantOwnerType)).thenReturn(Mono.just(accountMerchant));
-        when(accountRepository.save(accountCustomer)).thenReturn(Mono.just(accountUpdatedCustomer));
-        when(accountRepository.save(accountMerchant)).thenReturn(Mono.just(accountUpdatedMerchant));
-
-        accountService.makeMoneyTransfer(transaction).block();  // Ensure the operation completes
-
-        verify(accountRepository, times(1)).findByOwnerIdAndType(customerOwnerId, customerOwnerType);
-        verify(accountRepository, times(1)).save(accountUpdatedCustomer);
-        verify(accountRepository, times(1)).findByOwnerIdAndType(merchantOwnerId, merchantOwnerType);
         verify(accountRepository, times(1)).save(accountUpdatedMerchant);
     }
 }
