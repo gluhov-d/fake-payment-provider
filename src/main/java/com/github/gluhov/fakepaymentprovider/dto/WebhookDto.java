@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -14,14 +15,14 @@ import java.util.UUID;
 @NoArgsConstructor
 @Builder
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
-public class WebHookDto {
+public class WebhookDto {
     private UUID transactionId;
     private String paymentMethod;
     private Long amount;
     private String currency;
     private String type;
-    private String createdAt;
-    private String updatedAt;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     private CardDataDto cardData;
     private String language;
     private CustomerDto customerDto;

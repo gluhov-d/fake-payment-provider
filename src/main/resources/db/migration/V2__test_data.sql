@@ -24,13 +24,12 @@ VALUES
 
 INSERT INTO payment_method (id, type, modified_by, created_by, status)
 VALUES
-    ('5d09f680-1c67-11ec-9621-0242ac130002', 'CARD', 'system', 'system', 'ACTIVE'),
-    ('5d09f680-1c67-11ec-9621-0242ac130003', 'CARD', 'system', 'system', 'ACTIVE');
+    ('5d09f680-1c67-11ec-9621-0242ac130002', 'CARD', 'system', 'system', 'ACTIVE');
 
-INSERT INTO transaction (id, notification_url, payment_method_id, type, currency, amount, language, message, status, customer_id, merchant_id, card_id, modified_by, created_by, transaction_status)
+INSERT INTO transaction (id, notification_url, payment_method_id, type, currency, amount, language, message, status, customer_id, merchant_id, card_id, modified_by, created_by, transaction_status, created_at)
 VALUES
-    ('6e09f680-1c67-11ec-9621-0242ac130002', 'https://proselyte.net/webhook/transaction', '5d09f680-1c67-11ec-9621-0242ac130002', 'transaction', 'USD', 500, 'en', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130002', '4c09f680-1c67-11ec-9621-0242ac130002','3e09f680-1c67-11ec-9621-0242ac130003', 'system', 'system', 'IN_PROGRESS'),
-    ('6e09f680-1c67-11ec-9621-0242ac130003', 'https://proselyte.net/webhook/payout', '5d09f680-1c67-11ec-9621-0242ac130003', 'payout', 'EUR', 200, 'de', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130003', '4c09f680-1c67-11ec-9621-0242ac130002', '3e09f680-1c67-11ec-9621-0242ac130003', 'system', 'system', 'IN_PROGRESS');
+    ('6e09f680-1c67-11ec-9621-0242ac130002', 'https://proselyte.net/webhook/transaction', '5d09f680-1c67-11ec-9621-0242ac130002', 'transaction', 'USD', 500, 'en', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130002', '4c09f680-1c67-11ec-9621-0242ac130002','3e09f680-1c67-11ec-9621-0242ac130003', 'system', 'system', 'IN_PROGRESS', CURRENT_DATE - 1),
+    ('6e09f680-1c67-11ec-9621-0242ac130003', 'https://proselyte.net/webhook/payout', '5d09f680-1c67-11ec-9621-0242ac130002', 'payout', 'EUR', 200, 'de', 'OK', 'ACTIVE', '1b09f680-1c67-11ec-9621-0242ac130003', '4c09f680-1c67-11ec-9621-0242ac130002', '3e09f680-1c67-11ec-9621-0242ac130003', 'system', 'system', 'IN_PROGRESS', CURRENT_TIMESTAMP);
 
 INSERT INTO webhook (id, transaction_id, status, message, modified_by, created_by, transaction_status)
 VALUES

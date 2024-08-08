@@ -35,13 +35,13 @@ public class PaymentService {
     private final CustomerMapper customerMapper;
     private final CardDataMapper cardDataMapper;
     private final PaymentMethodMapper paymentMethodMapper;
-
     private final WebhookService webhookService;
     private final CardService cardService;
     private final CustomerService customerService;
 
     public Flux<TransactionDto> getBetweenByType(LocalDateTime startDate, LocalDateTime endDate, UUID merchantId, String type) {
         return transactionRepository.getBetweenByType(merchantId, type, startDate, endDate)
+                .switchIfEmpty(Mono.empty())
                 .flatMap(this::constructTransactionDto);
     }
 
@@ -71,7 +71,7 @@ public class PaymentService {
     }
 
     @Transactional
-    public Mono<?> createTransaction(TransactionDto transactionDto, UUID uuid, String type) {
+    public Mono<TransactionResponseDto> createTransaction(TransactionDto transactionDto, UUID uuid, String type) {
         Transaction transaction = transactionMapper.map(transactionDto);
         if (type.equals(PAYOUT) && transaction.getAmount() < MIN_AMOUNT_PAYOUT) {
             return Mono.error(new ApiException("Transaction less than min amount", "FPP_PAYOUT_MIN_AMOUNT"));
@@ -103,7 +103,7 @@ public class PaymentService {
                 );
     }
 
-    private Mono<?> processExistingCustomerTransaction(Customer existingCustomer, Transaction transaction, CardData cardData, UUID uuid, LocalDateTime now) {
+    private Mono<TransactionResponseDto> processExistingCustomerTransaction(Customer existingCustomer, Transaction transaction, CardData cardData, UUID uuid, LocalDateTime now) {
         return accountService.getById(existingCustomer.getAccountId())
                 .flatMap(account -> cardService.findByCardAccountIdAndCardNumber(account.getId(), cardData.getCardNumber())
                         .defaultIfEmpty(new CardData())
@@ -121,7 +121,7 @@ public class PaymentService {
                         }));
     }
 
-    private Mono<?> saveTransactionAndSentNotification(Customer existingCustomer, Transaction transaction, UUID uuid, LocalDateTime now, Account account, CardData existingCardData) {
+    private Mono<TransactionResponseDto> saveTransactionAndSentNotification(Customer existingCustomer, Transaction transaction, UUID uuid, LocalDateTime now, Account account, CardData existingCardData) {
         if (account.getCurrency().equals(transaction.getCurrency())) {
             transaction.setTransactionStatus(TransactionStatus.IN_PROGRESS);
             transaction.setCustomerId(existingCustomer.getId());

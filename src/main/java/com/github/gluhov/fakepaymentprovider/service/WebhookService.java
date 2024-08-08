@@ -1,6 +1,6 @@
 package com.github.gluhov.fakepaymentprovider.service;
 
-import com.github.gluhov.fakepaymentprovider.dto.WebHookDto;
+import com.github.gluhov.fakepaymentprovider.dto.WebhookDto;
 import com.github.gluhov.fakepaymentprovider.exception.ProcessingException;
 import com.github.gluhov.fakepaymentprovider.mapper.CardDataMapper;
 import com.github.gluhov.fakepaymentprovider.mapper.CustomerMapper;
@@ -29,29 +29,28 @@ public class WebhookService {
     private final PaymentMethodService paymentMethodService;
 
     public Mono<Void> sendNotification(Transaction transaction) {
-        log.info("Send notification with status: " + transaction.getTransactionStatus());
-        if (transaction.getNotificationUrl() == null && transaction.getNotificationUrl().isEmpty()) {
+        if (transaction.getNotificationUrl() == null || transaction.getNotificationUrl().isEmpty()) {
             return Mono.error(new ProcessingException("Notification can not be send", "FPP_PROCESSING_NOTIFICATION_ERROR"));
         }
         LocalDateTime now = LocalDateTime.now();
-        return webhookRepository.save(
-                Webhook.builder()
-                        .createdBy(transaction.getModifiedBy())
-                        .modifiedBy(transaction.getModifiedBy())
-                        .createdAt(now)
-                        .updatedAt(now)
-                        .message("OK")
-                        .transactionId(transaction.getId())
-                        .status(Status.ACTIVE)
-                        .transactionStatus(transaction.getTransactionStatus())
-                        .build())
+        Webhook webhook = Webhook.builder()
+                .createdBy(transaction.getModifiedBy())
+                .modifiedBy(transaction.getModifiedBy())
+                .createdAt(now)
+                .updatedAt(now)
+                .message("OK")
+                .transactionId(transaction.getId())
+                .status(Status.ACTIVE)
+                .transactionStatus(transaction.getTransactionStatus())
+                .build();
+        return webhookRepository.save(webhook)
                 .flatMap(savedWebhook -> cardService.getById(transaction.getCardId())
                         .flatMap(existingCard -> customerService.getById(transaction.getCustomerId())
                                 .flatMap(existingCustomer -> paymentMethodService.getById(transaction.getPaymentMethodId())
                                         .flatMap(existingPaymentMethod -> {
                                             return webClient.post()
                                                     .uri(transaction.getNotificationUrl())
-                                                    .bodyValue(WebHookDto.builder()
+                                                    .bodyValue(WebhookDto.builder()
                                                             .type(transaction.getType())
                                                             .amount(transaction.getAmount())
                                                             .language(transaction.getLanguage())

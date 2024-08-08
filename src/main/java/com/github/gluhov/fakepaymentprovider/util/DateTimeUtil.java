@@ -11,10 +11,10 @@ import java.util.TimeZone;
 @UtilityClass
 public final class DateTimeUtil {
     public static LocalDateTime dayOrMin(Long localDate) {
-        return localDate != null ? LocalDateTime.ofInstant(Instant.ofEpochSecond(localDate), TimeZone.getDefault().toZoneId()) : LocalDate.now().atStartOfDay();
+        return localDate != null ? LocalDateTime.ofInstant(Instant.ofEpochMilli(localDate), TimeZone.getDefault().toZoneId()) : LocalDate.now().atStartOfDay();
     }
 
     public static LocalDateTime dayOrMax(Long localDate) {
-        return localDate != null ? LocalDateTime.ofInstant(Instant.ofEpochSecond(localDate), TimeZone.getDefault().toZoneId()) : LocalDate.now().atTime(LocalTime.MAX);
+        return localDate != null ? LocalDateTime.ofInstant(Instant.ofEpochMilli(localDate), TimeZone.getDefault().toZoneId()) : LocalDate.now().atTime(LocalTime.MAX);
     }
 }

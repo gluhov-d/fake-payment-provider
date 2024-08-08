@@ -22,7 +22,6 @@ public class Webhook extends BaseEntity {
     private TransactionStatus transactionStatus;
 
     @Builder
-
     public Webhook(UUID id, Status status, LocalDateTime createdAt, LocalDateTime updatedAt, String createdBy, String modifiedBy, UUID transactionId, String message, TransactionStatus transactionStatus) {
         super(id, status, createdAt, updatedAt, createdBy, modifiedBy);
         this.transactionId = transactionId;

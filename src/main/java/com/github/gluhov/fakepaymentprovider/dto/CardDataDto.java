@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.github.gluhov.fakepaymentprovider.model.CardData;
 import com.github.gluhov.fakepaymentprovider.util.JsonExpirationDateDeserializer;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,6 +28,10 @@ public class CardDataDto {
     private LocalDate expDate;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private int cvv;
+
+    public CardDataDto(CardData cardData) {
+        this.cardNumber = cardData.getCardNumber();
+    }
 
     @JsonProperty("card_number")
     public String getMaskedCardNumber() {

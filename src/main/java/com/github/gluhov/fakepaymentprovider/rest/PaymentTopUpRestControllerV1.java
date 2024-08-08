@@ -14,9 +14,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping(produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-public class PaymentWithdrawalRestController extends AbstractPaymentRestController{
-    public static final String REST_URL = "/api/v1/payments/payout";
-    public static final String TYPE = "payout";
+public class PaymentTopUpRestControllerV1 extends AbstractPaymentRestController{
+    public static final String REST_URL = "/api/v1/payments/transaction";
+    public static final String TYPE = "transaction";
 
     @GetMapping(value = REST_URL + "/{id}/details")
     public Mono<?> getById(@PathVariable UUID id) {
@@ -32,7 +32,7 @@ public class PaymentWithdrawalRestController extends AbstractPaymentRestControll
     }
 
     @PostMapping(value = REST_URL)
-    public Mono<?> payout(@RequestBody TransactionDto transactionDto, Authentication authentication) {
+    public Mono<?> topUp(@RequestBody TransactionDto transactionDto, Authentication authentication) {
         CustomPrincipal customPrincipal = (CustomPrincipal) authentication.getPrincipal();
         return super.createTransaction(transactionDto, customPrincipal.getUuid(), TYPE);
     }

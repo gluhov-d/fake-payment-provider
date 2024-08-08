@@ -1,5 +1,5 @@
 CREATE TABLE account (
-                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                         id UUID PRIMARY KEY,
                          balance BIGINT NOT NULL,
                          owner_id UUID NOT NULL,
                          owner_type VARCHAR(255) NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE account (
 );
 
 CREATE TABLE card_data (
-                           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                           id UUID PRIMARY KEY,
                            card_number VARCHAR(255) NOT NULL,
                            exp_date TIMESTAMP NOT NULL,
                            cvv INT NOT NULL,
@@ -26,7 +26,7 @@ CREATE TABLE card_data (
 );
 
 CREATE TABLE customer (
-                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                          id UUID PRIMARY KEY,
                           first_name VARCHAR(255) NOT NULL,
                           last_name VARCHAR(255) NOT NULL,
                           country VARCHAR(255) NOT NULL,
@@ -40,7 +40,7 @@ CREATE TABLE customer (
 );
 
 CREATE TABLE merchant (
-                          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                          id UUID PRIMARY KEY,
                           merchant_id VARCHAR(255) NOT NULL UNIQUE,
                           account_id UUID,
                           secret_key VARCHAR(255) NOT NULL,
@@ -53,7 +53,7 @@ CREATE TABLE merchant (
 );
 
 CREATE TABLE payment_method (
-                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                id UUID PRIMARY KEY,
                                 type VARCHAR(255) NOT NULL,
                                 status VARCHAR(255),
                                 modified_by VARCHAR(255),
@@ -63,7 +63,7 @@ CREATE TABLE payment_method (
 );
 
 CREATE TABLE transaction (
-                             id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                             id UUID PRIMARY KEY,
                              notification_url VARCHAR(255),
                              payment_method_id UUID,
                              type VARCHAR(255) NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE transaction (
 );
 
 CREATE TABLE webhook (
-                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                         id UUID PRIMARY KEY,
                          transaction_id UUID,
                          transaction_status VARCHAR(255),
                          status VARCHAR(255),
