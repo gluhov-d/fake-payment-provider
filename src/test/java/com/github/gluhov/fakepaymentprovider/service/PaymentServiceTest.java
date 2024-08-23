@@ -8,6 +8,7 @@ import com.github.gluhov.fakepaymentprovider.mapper.PaymentMethodMapper;
 import com.github.gluhov.fakepaymentprovider.mapper.TransactionMapper;
 import com.github.gluhov.fakepaymentprovider.model.Transaction;
 import com.github.gluhov.fakepaymentprovider.repository.TransactionRepository;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,9 +16,9 @@ import org.mockito.Mock;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 import static com.github.gluhov.fakepaymentprovider.service.AccountData.accountCustomer;
 import static com.github.gluhov.fakepaymentprovider.service.CardTestData.cardCustomerData;
@@ -29,7 +30,8 @@ import static com.github.gluhov.fakepaymentprovider.service.MerchantData.merchan
 import static com.github.gluhov.fakepaymentprovider.service.PaymentMethodData.paymentMethod;
 import static com.github.gluhov.fakepaymentprovider.service.PaymentMethodData.paymentMethodDto;
 import static com.github.gluhov.fakepaymentprovider.service.TransactionData.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
@@ -63,6 +65,7 @@ public class PaymentServiceTest {
     private PaymentService paymentService;
 
     @Test
+    @DisplayName("Test get between by type functionality")
     void getBetweenByType() {
         when(transactionRepository.getBetweenByType(MERCHANT_UUID, transaction.getType(), START_DATE, END_DATE)).thenReturn(Flux.just(transaction));
 
@@ -77,12 +80,15 @@ public class PaymentServiceTest {
         when(paymentMethodMapper.map(paymentMethod)).thenReturn(new PaymentMethodDto(paymentMethod));
 
         Flux<TransactionDto> result = paymentService.getBetweenByType(START_DATE, END_DATE, MERCHANT_UUID, transaction.getType());
-        TransactionDto resultDto = result.blockFirst();
-        assertEquals(transaction.getId(), resultDto.getTransactionId());
-        assertEquals(Arrays.asList(transactionDto), result.collectList().block());
+        StepVerifier.create(result)
+                        .assertNext(r -> {
+                            assertEquals(transaction.getId(), r.getTransactionId());
+                        })
+                .verifyComplete();
     }
 
     @Test
+    @DisplayName("Test get by id and type functionality")
     void getByIdAndType() {
         when(transactionRepository.getByIdAndType(transaction.getId(), transaction.getType())).thenReturn(Mono.just(transaction));
         when(accountService.getById(accountCustomer.getId())).thenReturn(Mono.just(accountCustomer));
@@ -95,29 +101,35 @@ public class PaymentServiceTest {
         when(cardDataMapper.map(cardCustomerData)).thenReturn(cardCustomerDataDto);
         when(paymentMethodMapper.map(paymentMethod)).thenReturn(paymentMethodDto);
 
-        TransactionDto result = paymentService.getByIdAndType(transaction.getId(), transaction.getType()).block();
-        assertEquals(result.getTransactionId(), transaction.getId());
-        assertEquals(result.getType(), transaction.getType());
+        Mono<TransactionDto> result = paymentService.getByIdAndType(transaction.getId(), transaction.getType());
+        StepVerifier.create(result)
+                        .expectNext(transactionDto)
+                                .verifyComplete();
     }
 
     @Test
+    @DisplayName("Test get by and type not found functionality")
     void getByIdAndTypeNotFound() {
         when(transactionRepository.getByIdAndType(any(), any())).thenReturn(Mono.empty());
 
-        paymentService.getByIdAndType(TRANSACTION_NOT_FOUND_UUID, transaction.getType()).subscribe(entity -> fail("Expected an EntityNotFoundException to be throw"),
-                error -> {
+        Mono<TransactionDto> result = paymentService.getByIdAndType(TRANSACTION_NOT_FOUND_UUID, transaction.getType());
+        StepVerifier.create(result)
+                .expectErrorSatisfies(error -> {
                     assertTrue(error instanceof EntityNotFoundException);
                     assertEquals("Transaction not found", error.getMessage());
                     assertEquals("FPP_TRANSACTION_NOT_FOUND", ((EntityNotFoundException) error).getErrorCode());
-                });
+                }).verify();
     }
 
     @Test
+    @DisplayName("Test get all with status IN_PROGRESS functionality")
     void getAllWithStatusInProgress() {
         when(transactionRepository.getAllWithStatusInProgress()).thenReturn(Flux.fromIterable(transactionsInProgress));
 
         Flux<Transaction> result = paymentService.getAllWithStatusInProgress();
-        assertEquals(transactionsInProgress, result.collectList().block());
+        StepVerifier.create(result.collectList())
+                        .expectNext(transactionsInProgress)
+                                .verifyComplete();
     }
 
     @Test
@@ -138,8 +150,12 @@ public class PaymentServiceTest {
         when(cardService.save(cardCustomerData)).thenReturn(Mono.just(cardCustomerData));
         when(webhookService.sendNotification(transaction)).thenReturn(Mono.empty());
 
-        TransactionResponseDto result = paymentService.createTransaction(transactionDto, transaction.getMerchantId(), transaction.getType()).block();
-        assertEquals(transaction.getId(), result.getTransactionId());
-        assertEquals(transaction.getTransactionStatus(), result.getStatus());
+        Mono<TransactionResponseDto> result = paymentService.createTransaction(transactionDto, transaction.getMerchantId(), transaction.getType());
+        StepVerifier.create(result)
+                        .assertNext(r -> {
+                            assertEquals(transaction.getId(), r.getTransactionId());
+                            assertEquals(transaction.getTransactionStatus(), r.getStatus());
+                        })
+                .verifyComplete();
     }
 }

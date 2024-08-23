@@ -21,8 +21,8 @@ public class ProcessingService {
 
     @Scheduled(fixedRate = 30000, initialDelay = 10000)
     @Transactional
-    public void changeTransactionStatus() {
-        paymentService.getAllWithStatusInProgress()
+    public Mono<Void> changeTransactionStatus() {
+        return paymentService.getAllWithStatusInProgress()
                 .flatMap(transaction ->
                         paymentService.updateTransactionStatus(transaction.getId(), ProcessingUtil.getRandomStatus())
                                 .flatMap(updatedTransaction -> {
@@ -39,9 +39,8 @@ public class ProcessingService {
                 )
                 .then()
                 .doOnError(e -> {
-                    throw new ProcessingException("Transaction failed", "FPP_PROCESSING_ERROR");
+                    log.error("Transaction failed:" + e.getMessage());
                 })
-                .subscribeOn(Schedulers.boundedElastic())
-                .subscribe();
+                .subscribeOn(Schedulers.boundedElastic());
     }
 }

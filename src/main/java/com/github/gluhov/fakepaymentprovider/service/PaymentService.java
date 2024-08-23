@@ -141,13 +141,12 @@ public class PaymentService {
         }
     }
 
-    public Mono<Transaction> updateTransactionStatus(UUID uuid, TransactionStatus newStatus) {
+    public Mono<Transaction>  updateTransactionStatus(UUID uuid, TransactionStatus newStatus) {
         return transactionRepository.findById(uuid)
                 .flatMap(t -> {
                     if (t.getTransactionStatus().equals(TransactionStatus.IN_PROGRESS)) {
                         t.setTransactionStatus(newStatus);
                         t.setUpdatedAt(LocalDateTime.now());
-                        log.debug("Transaction status updated to " + newStatus);
                         return transactionRepository.save(t);
                     } else {
                         return Mono.error(new ProcessingException("Transaction status can not be changed", "FPP_PROCESSING_STATUS_NOT_CHANGED"));

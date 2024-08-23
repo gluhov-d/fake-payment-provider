@@ -1,18 +1,22 @@
 package com.github.gluhov.fakepaymentprovider.service;
 
+import com.github.gluhov.fakepaymentprovider.exception.ProcessingException;
 import com.github.gluhov.fakepaymentprovider.model.Transaction;
 import com.github.gluhov.fakepaymentprovider.model.TransactionStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 import reactor.test.scheduler.VirtualTimeScheduler;
 
+import java.util.UUID;
+
 import static com.github.gluhov.fakepaymentprovider.service.TransactionData.transaction;
-import static com.github.gluhov.fakepaymentprovider.service.TransactionData.updatedTransaction;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -36,11 +40,16 @@ public class ProcessingServiceTest {
     }
 
     @Test
+    @DisplayName("Test change transaction status when status SUCCESS functionality")
     public void testChangeTransactionStatus_Success() {
         VirtualTimeScheduler.getOrSet();
 
         Transaction successTransaction = Transaction.builder()
                 .transactionStatus(TransactionStatus.SUCCESS)
+                .customerId(UUID.randomUUID())
+                .merchantId(UUID.randomUUID())
+                .type("transaction")
+                .amount(100L)
                 .build();
 
         when(paymentService.getAllWithStatusInProgress()).thenReturn(Flux.just(transaction));
@@ -48,8 +57,9 @@ public class ProcessingServiceTest {
         when(accountService.makeMoneyTransfer(any())).thenReturn(Mono.empty());
         when(webhookService.sendNotification(any())).thenReturn(Mono.empty());
 
-
-        processingService.changeTransactionStatus();
+        StepVerifier.withVirtualTime(() -> processingService.changeTransactionStatus())
+                .thenAwait()
+                .verifyComplete();
 
         verify(paymentService, times(1)).getAllWithStatusInProgress();
         verify(paymentService, times(1)).updateTransactionStatus(eq(transaction.getId()), any(TransactionStatus.class));
@@ -58,6 +68,7 @@ public class ProcessingServiceTest {
     }
 
     @Test
+    @DisplayName("Test change transaction status when status FAILED functionality")
     public void testChangeTransactionStatus_Failure() {
         VirtualTimeScheduler.getOrSet();
         Transaction failureTransaction = Transaction.builder()
@@ -67,22 +78,29 @@ public class ProcessingServiceTest {
         when(paymentService.updateTransactionStatus(any(), any())).thenReturn(Mono.just(failureTransaction));
         when(webhookService.sendNotification(any())).thenReturn(Mono.empty());
 
-        processingService.changeTransactionStatus();
+
+        StepVerifier.withVirtualTime(() -> processingService.changeTransactionStatus())
+                .thenAwait()
+                .verifyComplete();
 
         verify(paymentService, times(1)).getAllWithStatusInProgress();
         verify(paymentService, times(1)).updateTransactionStatus(eq(transaction.getId()), any(TransactionStatus.class));
-        verify(accountService, never()).makeMoneyTransfer(updatedTransaction);
+        verify(accountService, never()).makeMoneyTransfer(failureTransaction);
         verify(webhookService, times(1)).sendNotification(failureTransaction);
     }
 
     @Test
+    @DisplayName("Test change transaction status when processing exception functionality")
     public void testChangeTransactionStatus_Error() {
         VirtualTimeScheduler.getOrSet();
 
         when(paymentService.getAllWithStatusInProgress()).thenReturn(Flux.just(transaction));
-        when(paymentService.updateTransactionStatus(transaction.getId(), TransactionStatus.SUCCESS)).thenReturn(Mono.error(new RuntimeException("Update failed")));
+        when(paymentService.updateTransactionStatus(any(), any())).thenReturn(Mono.error(new ProcessingException("Transaction not updated", "FPP_PROCESSING_ERROR")));
 
-        processingService.changeTransactionStatus();
+        StepVerifier.withVirtualTime(() -> processingService.changeTransactionStatus())
+                .expectErrorMatches(throwable -> throwable instanceof ProcessingException &&
+                        throwable.getMessage().equals("Transaction not updated"))
+                .verify();
 
         verify(paymentService, times(1)).getAllWithStatusInProgress();
         verify(paymentService, times(1)).updateTransactionStatus(eq(transaction.getId()), any(TransactionStatus.class));
