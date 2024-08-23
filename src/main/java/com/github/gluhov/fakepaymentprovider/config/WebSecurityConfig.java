@@ -25,6 +25,8 @@ public class WebSecurityConfig {
         return http
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange((authz) -> authz
+                        .pathMatchers("/api/v1/api-docs/**").permitAll()
+                        .pathMatchers("/swagger-ui/**").permitAll()
                         .anyExchange().authenticated()
                 )
                 .exceptionHandling((exception) -> exception
