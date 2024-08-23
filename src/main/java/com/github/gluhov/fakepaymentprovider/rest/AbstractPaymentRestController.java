@@ -28,6 +28,6 @@ public abstract class AbstractPaymentRestController {
     }
 
     public Mono<?> createTransaction(TransactionDto transactionDto, UUID uuid, String type) {
-        return paymentService.createTransaction(transactionDto, uuid, type);
+        return paymentService.createTransaction(transactionDto, uuid, type).map(transactionResponseDto -> ResponseEntity.ok().body(transactionResponseDto));
     }
 }

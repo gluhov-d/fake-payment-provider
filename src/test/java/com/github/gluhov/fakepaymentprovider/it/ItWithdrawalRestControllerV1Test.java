@@ -191,8 +191,8 @@ public class ItWithdrawalRestControllerV1Test extends AbstractRestControllerTest
         resp.expectStatus().isOk()
                 .expectBody()
                 .consumeWith(System.out::println)
-                .jsonPath("$.transaction_id").exists()
-                .jsonPath("$.transaction_id").isNotEmpty();
+                .jsonPath("$.body.transaction_id").exists()
+                .jsonPath("$.body.transaction_id").isNotEmpty();
     }
 
     @Test

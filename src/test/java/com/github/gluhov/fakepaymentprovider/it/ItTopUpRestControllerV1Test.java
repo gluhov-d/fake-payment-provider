@@ -14,9 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.Base64;
 
 import static com.github.gluhov.fakepaymentprovider.service.MerchantData.merchant;
@@ -81,10 +78,8 @@ public class ItTopUpRestControllerV1Test extends AbstractRestControllerTest {
     @Test
     @DisplayName("Test get between topup info functionality")
     public void givenStartDateEndDate_whenGetBetweenTopup_thenSuccessResponse() {
-        long startDate = LocalDate.now().minusDays(1).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long endDate = LocalDate.now().minusDays(1).atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         WebTestClient.ResponseSpec resp = webTestClient.get()
-                .uri(REST_URL + "/list?start_date=" + startDate + "&end_date=" + endDate)
+                .uri(REST_URL + "/list?start_date=" + START_TIME_DATE_BEFORE + "&end_date=" + END_TIME_DATE_BEFORE)
                 .headers(headers -> headers.setBasicAuth(token))
                 .exchange();
 
@@ -98,10 +93,8 @@ public class ItTopUpRestControllerV1Test extends AbstractRestControllerTest {
     @Test
     @DisplayName("Test get between not found topup info functionality")
     public void givenStartDateEndDate_whenGetBetweenNotFoundTopup_thenSuccessResponse() {
-        long startDate = LocalDate.now().minusDays(3).atStartOfDay().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-        long endDate = LocalDate.now().minusDays(3).atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
         WebTestClient.ResponseSpec resp = webTestClient.get()
-                .uri(REST_URL + "/list?start_date=" + startDate + "&end_date=" + endDate)
+                .uri(REST_URL + "/list?start_date=" + START_TIME_DATE_THREE_DAYS_BEFORE + "&end_date=" + END_TIME_DATE_THREE_DAYS_BEFORE)
                 .headers(headers -> headers.setBasicAuth(token))
                 .exchange();
 
@@ -158,8 +151,8 @@ public class ItTopUpRestControllerV1Test extends AbstractRestControllerTest {
         resp.expectStatus().isOk()
                 .expectBody()
                 .consumeWith(System.out::println)
-                .jsonPath("$.transaction_id").exists()
-                .jsonPath("$.transaction_id").isNotEmpty();
+                .jsonPath("$.body.transaction_id").exists()
+                .jsonPath("$.body.transaction_id").isNotEmpty();
     }
 
     @Test
@@ -195,7 +188,7 @@ public class ItTopUpRestControllerV1Test extends AbstractRestControllerTest {
         resp.expectStatus().isOk()
                 .expectBody()
                 .consumeWith(System.out::println)
-                .jsonPath("$.transaction_id").exists()
-                .jsonPath("$.transaction_id").isNotEmpty();
+                .jsonPath("$.body.transaction_id").exists()
+                .jsonPath("$.body.transaction_id").isNotEmpty();
     }
 }
